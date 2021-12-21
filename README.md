@@ -6,7 +6,7 @@ Powershell module for Log4Shell
 >_PS>. .Invoke-Log4ShellScanner.ps1_  
 >_PS>Invoke-Log4ShellScanner -Uri [sites file] -CanaryTokenDNS [canary token/ custom IP/DNS] -Headers [headers file] -Forms -Quick_  
 >_PS>Invoke-Log4ShellFastScan -Uri [sites_file] -CanaryTokenDNS [canary token/ custom IP/DNS]_  
->_PS>Invoke-Log4ShellCheckForms -Uri [url_address] -Payload 
+>_PS>Invoke-Log4ShellCheckForms -Uri [url_address] -Payload_  
 
 > * _-Uri_ - file that contains URLs to scan (https://example.com example in example-sites.txt)
 > * _-CanaryTokenDNS_ - IP address or domain name of OOB service which provide us the logs
