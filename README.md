@@ -15,7 +15,7 @@ Powershell module for Log4Shell
 > * _-Quick_ - switch to provide fast scan (only 2 payloads are being tested) [OPTIONAL]  
 > * _-Payload_ - payload parameter (eg ${jndi:ldap://mysite.com/a})  
 
-###Description  
+### Description  
 The Invoke-Log4ShellScanner is a powershell script that provides 3 functions:  
 1) _Invoke-Log4ShellScanner_  
 The most advanced scan can test provided site pool for obfuscated payloads by sending GET,POST and optionally forms. The payload is placed inside the URI, choosen Headers and arguments of POST method and GET URI.  
